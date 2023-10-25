@@ -1,10 +1,25 @@
 sources:
   - name: jaffle_shop
+    description: A clone of a PostgreSQl database
     database: raw
     schema: jaffle_shop
     tables:
       - name: customers
+        description: Raw customer data 
+        columns: 
+          - name: id
+            description: Primary Key renamed to customre_id
+            tests:
+              - unique
+              - not_null
       - name: orders
+        description: Raw orders data
+        columns: 
+          - name: id
+            description: Primary key renamed to order_id
+            tests:
+              - unique
+              - not_null
         loaded_at_field: _etl_loaded_at
         freshness:
           warn_after: {count: 30, period: day}
