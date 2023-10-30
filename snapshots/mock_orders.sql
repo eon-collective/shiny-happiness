@@ -4,7 +4,7 @@
 
 {{
     config(
-      target_database='the_office',
+      target_database='analytics',
       target_schema=new_schema,
       unique_key='order_id',
 
@@ -13,6 +13,6 @@
     )
 }}
 
-select * from the_office.{{target.schema}}.mock_orders
+select * from analytics.{{target.schema}}.mock_orders
 
 {% endsnapshot %}
