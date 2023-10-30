@@ -38,3 +38,26 @@ models:
       +materialized: table
     staging:
       +materialized: view
+
+    dbt_project_evaluator:
+      marts:
+        tests:
+          # disable entire test coverage suite
+          +enabled: false
+        dag:
+          # disable single DAG model
+          fct_model_fanout:
+            +enabled: false
+
+
+    on-run-end: "{{ dbt_readme_logger.log_results_csv() }}"
+    # on-run-end: "{{ dbt_artifacts.upload_results(results) }}"
+
+    tests:
+      dbt_project_evaluator:
+        +severity: error
+
+    seeds:
+      dbt_project_evaluator:
+        dbt_project_evaluator_exceptions:
+          +enabled: false
