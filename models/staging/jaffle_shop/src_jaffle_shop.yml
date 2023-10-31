@@ -1,3 +1,5 @@
+version: 2
+
 sources:
   - name: jaffle_shop
     description: A clone of a PostgreSQl database
