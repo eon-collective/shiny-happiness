@@ -61,3 +61,8 @@ seeds:
   dbt_project_evaluator:
     dbt_project_evaluator_exceptions:
       +enabled: false
+
+vars:
+  dbt_project_evaluator:
+    documentation_coverage_target: 70
+    exclude_packages: ["dbt_artifacts"]
