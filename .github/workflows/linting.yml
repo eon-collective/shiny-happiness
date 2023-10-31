@@ -1,31 +1,28 @@
-name: lint and test sql formatting 
+name: Sqlfluff CI pipe run
 on:
   push:
     branches: [ "feature/*" ]
   pull_request:
-    branches: [ "main" ] 
-
+    branches: [ "main" ]
+env:
+  DBT_PROJECT_NAME: jaffle_shop
 jobs:
-  lint_and_test_project:
-    name: Lint and Test dbt project
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - name: Install SQLFluff and dbt
-        run: |
-          pip install dbt-snowflake
-          pip install sqlfluff
-          pip install sqlfluff-templater-dbt
-      - name: Lint project
-        run: |
-          sqlfluff --version
-          cd ./models
-          sqlfluff lint -i templating,parsing --dialect snowflake .
-      - name: Print success message
-        run: echo "The source code observes the best practices!"
+    compile:
+        name: Build and Compile dbt Project
+        runs-on: ubuntu-latest
+        steps:
+          - name: Check out the repo hosting the dbt project
+            uses: actions/checkout@main
+          - name: Set up Python virtual environment
+            uses: actions/setup-python@v4
+            with:
+                python-version: '3.10'
+          - name: install sqlfluff python package
+            run: pip install sqlfluff
+          - name: install sqlfluff templater for dbt
+            run: pip install dbt-snowflake sqlfluff-templater-dbt
+          - name: linting sql model files
+            run: |
+                sqlfluff --version
+                cd ./models
+                sqlfluff lint  -i templating,parsing --dialect snowflake .
