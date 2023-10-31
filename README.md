@@ -77,9 +77,9 @@
 
 ## Revision History <a name="project_revisionhistory"></a> [↑](#toc-)
 
-|**Version** | **Revision Date** |
-| :-------: | :-------------: |
-|v1.0       | May 20, 2022    |
+| **Version** | **Revision Date** |
+|:-----------:|:-----------------:|
+|    v1.6     |   Jul 31, 2023    |
 
 ## dbt Project Version <a name="dbt_project_version_info"></a> [↑](#toc-)
 
@@ -90,26 +90,8 @@
 
 # Overview <a name="dbt_project_overview"></a> [↑](#toc-)
 
-TODO: Add dbt project Documentation - The purpose/objective of this project.
 
-![Scheme](etc/images/UMM_Objective.png)- The system catalog, optimizer, query executor, and transaction manager components have been modified and enhanced 
-to be able to run queries simultaneously across all of the parallel PostgreSQL database instances. 
-- use declarative partitions and sub-partitions to implicitly generate partition constraints.
-- includes features designed to optimize PostgreSQL for business intelligence (BI) workloads 
-- use a Volcano-style query engine model
-- stores and processes large amounts of data by distributing the data and processing workload across several servers 
-or hosts.
-
-**Note:**
-Volcano-style query engine model
-    - The execution engine takes an execution plan and uses it to generate a tree of physical operators. evaluates 
-table through physical operators and delivers results in a query response
-
-[↑](#toc-)
-# Application Functional Overview <a name="dbt_project_components"></a> 
-
-TODO: Add dbt project Documentation - The high level overview of application overview.
-*you can put functional architecture diagram here: where is the data coming from? what does your application do at, any downstream applications etc*
+# Application Functional Overview <a name="dbt_project_components"></a> [↑](#toc-)
 
 ```mermaid
 graph LR
@@ -131,11 +113,10 @@ Y -- consumed by --> Z>dashboard]
 
 
 ```
-[↑](#toc-)
-## Project Input <a name="dbt_project_input"></a> 
 
-[↑](#toc-)
-###  Source Data from Raw Layer  <a name="dbt_project_input_source_tables"></a>
+## Project Input <a name="dbt_project_input"></a> [↑](#toc-)
+
+###  Source Data from Raw Layer  <a name="dbt_project_input_source_tables"></a> [↑](#toc-)
 
 The following raw tables are consumed by this project
 
@@ -143,7 +124,6 @@ The following raw tables are consumed by this project
 |:------------:|:-----------:|:---------:|:---------:|
 | RAW          | JAFFLE_SHOP | CUSTOMERS |   Data from a customer table in Jaffle Shop has been loaded from a CSV file located in a public [S3 bucket](s3://dbt-tutorial-public/jaffle_shop_customers.csv)        |
 | RAW          | JAFFLE_SHOP | ORDERS    |    Data from an orders table in Jaffle Shop has been loaded from a CSV file located in a public S3 bucket.       |
-| RAW          | SNOWPLOW    | EVENTS    |    No records in the dw       |
 | RAW          | STRIPE      | PAYMENT   |   Data on the payment of Jaffle Shop in Stripe has been loaded from a CSV file located in a public S3 bucket.        |
 
 
@@ -154,47 +134,110 @@ The following static tables are used by this project. Non-seed files are located
 's3://bose-bucket/*' folder. They get `COPY INTO` the appropriate tables using a storage integration.
 
 | **FILENAME** | **DATABASE** | **SCHEMA**     | **SEED**  | **NOTES** |
-|:------------:|:------------:|:--------------:|:---------:|:---------:|
-|              | THE_OFFICE   | DBT_AAHMED_DEV | EMPLOYEES |   - Loaded with `dbt seed` command run & Loads static csv file found in the `seeds` folder of the project into snowflake table        |
+|:------------:|:----------:|:--------------:|:---------:|:---------:|
+|              | ANALYTICS |  DBT_DMALUNGU| DBT_PROJECT_EVALUATOR_EXCEPTIONS |  |
+|              | ANALYTICS | DBT_DMALUNGU | EMPLOYEES |  |
 
 
-[↑](#toc-)
-## Cleansing/Transformation <a name="dbt_project_cleansing_and_transformation"></a>
+
+## Cleansing/Transformation <a name="dbt_project_cleansing_and_transformation"></a> [↑](#toc-)
 
 This project handles the following transformations/cleansing or curation details during its execution.
 
-| **DATABASE** | **SCHEMA**     | **MODEL**           | **MATERIALIZATION** | **TAGS** | **NOTES** |
-|:------------:|:--------------:|:-------------------:|:-------------------:|:--------:|:---------:|
-| THE_OFFICE   | DBT_AAHMED_DEV | STG_CUSTOMERS       | VIEW                | []       |  - Renamed `id` to `customer_id`, Created new column `full_name` from  `first_name` and `last_name`         |
-| THE_OFFICE   | DBT_AAHMED_DEV | STG_ORDERS          | VIEW                | []       |   - Renamed `user_id` to `customer_id` ,  Created new column `valid_order_date` by filtering when status column        |
-| THE_OFFICE   | DBT_AAHMED_DEV | STG_PAYMENTS        | VIEW                | []       |   - Renamed `id` to `payment_id` ,  Renamed `orderid` to `order_id` ,  Used Marcos convert cents to dollars ,  Renamed  `created` to  `created_at`        |
-| THE_OFFICE   | DBT_AAHMED_DEV | FCT_ORDERS          | TABLE               | []       |   - Get the `amount` when status = 'success' ,  left join the two source tables        |
-| THE_OFFICE   | DBT_AAHMED_DEV | INT_ORDERS          | TABLE               | []       |   - Get the `amount` when status = 'success' ,  left join the two source tables        |
+| **DATABASE** | **SCHEMA**     | **MODEL**           | **MATERIALIZATION** | **TAGS** |                                                                     **NOTES**                                                                     |
+|:------------:|:--------------:|:-------------------:|:-------------------:|:--------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+| ANALYTICS   | DBT_DMALUNGU | STG_CUSTOMERS       | VIEW                | []       |                        - Renamed `id` to `customer_id`, Created new column `full_name` from  `first_name` and `last_name`                         |
+| ANALYTICS   | DBT_DMALUNGU | STG_ORDERS          | VIEW                | []       |                                            - Renamed `user_id` to `customer_id` and `id` to `order_id`                                            |
+| ANALYTICS   | DBT_DMALUNGU | STG_PAYMENTS        | VIEW                | []       | - Renamed `id` to `payment_id` , `orderid` to `order_id` , `papaymentymentmethod` to  `payment_method`, and  Used Marcos convert cents to dollars |
+| ANALYTICS   | DBT_DMALUNGU | FCT_ORDERS          | TABLE               | []       |                                   - Adding `amount` details to orders by joing `stg_orders` and `stg_payments`                                    |
+| ANALYTICS   | DBT_DMALUNGU | INT_ORDERS          | TABLE               | []       |                                                     - Pivote table of table `stg_payments` on `payment_method`                                                      |
 
-[↑](#toc-)
-## Project Output <a name="dbt_project_output"></a>
+
+## Project Output <a name="dbt_project_output"></a> [↑](#toc-)
 
 This project produces the following tables in snowflake i.e models that don't have any child.
 
-| **DATABASE** | **SCHEMA**     | **MODEL**           | **MATERIALIZATION** | **TAGS** | **NOTES** |
-|:------------:|:--------------:|:-------------------:|:-------------------:|:--------:|:---------:|
-| THE_OFFICE   | DBT_AAHMED_DEV | ALL_DATES           | TABLE               | []       |           |
-| THE_OFFICE   | DBT_AAHMED_DEV | CUSTOMER_ORDERS     | TABLE               | []       |           |
-| THE_OFFICE   | DBT_AAHMED_DEV | STG_PAGE_VIEWS      | INCREMENTAL         | []       |           |
-| THE_OFFICE   | DBT_AAHMED_DEV | INT_ORDERS__PIVOTED | TABLE               | []       |           |
-| THE_OFFICE   | DBT_AAHMED_DEV | DIM_CUSTOMERS       | TABLE               | []       |           |
-| THE_OFFICE   | DBT_AAHMED_DEV | FCT_CUSTOMER_ORDERS | TABLE               | []       |           |
-| THE_OFFICE   | DBT_AAHMED_DEV | REPEAT_CUSTOMERS    | EPHEMERAL           | []       |           |
+| DATABASE  | SCHEMA      | MODEL                                          | MATERIALIZATION | TAGS | NOTES |
+|-----------|-------------|------------------------------------------------|-----------------|------|-------|
+| ANALYTICS | DBT_DMALUNGU | ALL_DATES                                      | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | DIM_CUSTOMERS                                  | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_ORDERS                                     | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | INT_ORDERS__PIVOTED                            | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | ORDERS__DEPRECATED                             | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_CUSTOMERS                                  | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_ORDERS                                     | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_PAYMENTS                                   | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | DIM_DBT__CURRENT_MODELS                        | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | DIM_DBT__EXPOSURES                             | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | DIM_DBT__MODELS                                | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | DIM_DBT__SEEDS                                 | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | DIM_DBT__SNAPSHOTS                             | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | DIM_DBT__SOURCES                               | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | DIM_DBT__TESTS                                 | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_DBT__INVOCATIONS                           | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_DBT__MODEL_EXECUTIONS                      | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_DBT__MODEL_INFORMATION                     | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_DBT__SEED_EXECUTIONS                       | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_DBT__SNAPSHOT_EXECUTIONS                   | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_DBT__TEST_EXECUTIONS                       | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | EXPOSURES                                      | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | INVOCATIONS                                    | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | MODELS                                         | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | MODEL_EXECUTIONS                               | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | MODEL_INFORMATION                              | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | SEEDS                                          | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | SEED_EXECUTIONS                                | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | SNAPSHOTS                                      | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | SNAPSHOT_EXECUTIONS                            | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | SOURCES                                        | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | TESTS                                          | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | TEST_EXECUTIONS                                | INCREMENTAL     | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__EXPOSURES                             | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__INVOCATIONS                           | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__MODELS                                | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__MODEL_EXECUTIONS                      | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__MODEL_INFORMATION                     | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__SEEDS                                 | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__SEED_EXECUTIONS                       | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__SNAPSHOTS                             | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__SNAPSHOT_EXECUTIONS                   | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__SOURCES                               | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__TESTS                                 | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_DBT__TEST_EXECUTIONS                       | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | INT_ALL_DAG_RELATIONSHIPS                      | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | INT_ALL_GRAPH_RESOURCES                        | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | INT_DIRECT_RELATIONSHIPS                       | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_DIRECT_JOIN_TO_SOURCE                      | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_HARD_CODED_REFERENCES                      | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_MARTS_OR_INTERMEDIATE_DEPENDENT_ON_SOURCE  | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_MODEL_FANOUT                               | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_MULTIPLE_SOURCES_JOINED                    | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_REJOINING_OF_UPSTREAM_CONCEPTS             | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_ROOT_MODELS                                | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_SOURCE_FANOUT                              | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_STAGING_DEPENDENT_ON_MARTS_OR_INTERMEDIATE | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_STAGING_DEPENDENT_ON_STAGING               | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_UNUSED_SOURCES                             | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_DOCUMENTATION_COVERAGE                     | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_UNDOCUMENTED_MODELS                        | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_CHAINED_VIEWS_DEPENDENCIES                 | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_EXPOSURE_PARENTS_MATERIALIZATIONS          | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_MODEL_DIRECTORIES                          | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_MODEL_NAMING_CONVENTIONS                   | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_SOURCE_DIRECTORIES                         | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | FCT_TEST_DIRECTORIES                           | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_NODES                                      | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_NODE_RELATIONSHIPS                         | TABLE           | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_SOURCES                                    | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_NAMING_CONVENTION_FOLDERS                  | VIEW            | []   |       |
+| ANALYTICS | DBT_DMALUNGU | STG_NAMING_CONVENTION_PREFIXES                 | VIEW            | []   |       |
 
-[↑](#toc-)
-## Data Lineage <a name="dbt_project_data_lineage"></a>
 
-The full data lineage image isn't reader friendly when outputted to an image as it is too long and too wide. To generate and serve the docs on your machine
-see [dbt Commands: How to Run](#dbt_project_howtorun). *Note: In dbt data lineage diagrams green bubbles are sources and blue bubbles are models.*
+## Data Lineage <a name="dbt_project_data_lineage"></a> [↑](#toc-)
 
-[↑](#toc-) 
-### Sample Data Lineages
-![Lineages](https://github.com/eon-collective/the_office/blob/main/resources/Lineage.gif)
+ 
+### Sample Data Lineages [↑](#toc-)
+![Lineages](etc/image/dbt-dag.png)
 
 
 ## Functional Context <a name="dbt_project_functional_context"></a> [↑](#toc-)
@@ -206,67 +249,80 @@ see [dbt Commands: How to Run](#dbt_project_howtorun). *Note: In dbt data lineag
 
 The project structure defined for dbt projects is as defined below:
 
-```commandline
-.
-├── README.md
+```bash
+./shiny-happiness
 ├── analyses
+│   ├── .gitkeep
+│   ├── order_by_day.sql
+│   └── total_revenue.sql
 ├── dbt_project.yml
+├── etc
+│   └── image
+│       ├── dbt-dag.png
+│       └── project_tree_structure.md
+├── .github
+│   └── workflows
+│       ├── ci_pipe.yml
+│       ├── linting.yml
+│       └── project_evaluator.yml
+├── .gitignore
+├── LICENSE
 ├── macros
-│   ├── cents_to_dollars.sql
-│   ├── clean_stale_models.sql
-│   └── grant_select.sql
+│   ├── cents_to_dollars.sql
+│   ├── clean_stale_models.sql
+│   ├── .gitkeep
+│   ├── grant_select.sql
+│   ├── limit_date_in_dev.sql
+│   └── log_results.sql
 ├── models
-│   ├── 1_Legacy
-│   │   └── customer_orders.sql
-│   ├── 2_staging
-│   │   └── jaffle_shop
-│   │       └── jaffle_shop.md
-│   │       └── src_jaffle_shop.yml
-│   │       └──stg_customers.sql
-│   │       └── stg_jaffle_shop.yml
-│   │       └──stg_orders.sql
-│   │   └── snowplow
-│   │       └── src_snowplow.yml
-│   │       └── stg_page_views.sql
-│   │   └── strip
-│   │       └── src_stripe.yml
-│   │       └── stg_payments.sql
-│   ├── 3_mart
-│   │   └── core
-│   │       └── dim_customers.sql
-│   │       └── fct_customer_orders.sql
-│   │       └── fct_orders.sql
-│   │       └── int_orders__pivoted.sql
-│   │       └── repeat_customers.sql
-│   │   └── intermediate
-│   │       └──int_orders.sql
-│   │   └── strip
-│   │       ├── src_stripe.yml
-│   │       ├── stg_payments.sql
-│   ├── all_dates.sql
+│   ├── marts
+│   │   ├── core
+│   │   │   ├── core.yml
+│   │   │   ├── dim_customers.sql
+│   │   │   └── fct_orders.sql
+│   │   └── intermediate
+│   │       ├── intermidiate.yml
+│   │       └── int_orders_pivoted.sql
+│   └── staging
+│       ├── jaffle_shop
+│       │   ├── jaffle_shop.md
+│       │   ├── src_jaffle_shop.yml
+│       │   ├── stg_customers.sql
+│       │   ├── stg_jaffle_shop.yml
+│       │   └── stg_orders.sql
+│       └── stripe
+│           ├── src_stripe.yml
+│           ├── stg_payments.sql
+│           └── stg_stripe.yml
 ├── packages.yml
-├── scratchpad
+├── README.md
 ├── seeds
+│   ├── dbt_project_evaluator_exceptions.csv
+│   ├── employees.csv
+│   └── .gitkeep
 ├── snapshots
+│   ├── .gitkeep
+│   └── mock_orders.sql
 └── tests
+    ├── assert_positive_total_for_payments.sql
+    └── .gitkeep
 ```
 This same project tree view above is persisted/versioned under *etc/project_tree_structure.md* - If project changes, please update both markdown documents.
 
-[↑](#toc-) 
-## Permissions <a name="dbt_project_permissions"></a>
+
+## Permissions <a name="dbt_project_permissions"></a> [↑](#toc-) 
 
 In order for this project to run successfuly, the following permissions are needed on Snowflake. 
 
-| **DATABASE NAME** | **SCHEMA**                                     | **TABLE NAME** | **PERMISSION** |
-|-------------------|------------------------------------------------|----------------|----------------|
-| `<ENV>_RAW`       | BODS, SAPE03, SAPSHP, SFTPGTSI                 | ALL            | READ           |
-| `<ENV>_MARTS`     | UMM_EMEA_REF_DATA, UMM_EMEA_STAGE, UMM_EMEA_DW | ALL            | READ & WRITE   |
+| **DATABASE NAME** | **SCHEMA**           | **TABLE NAME** | **PERMISSION** |
+|----|----------------------|----------------|----------------|
+| `RAW` | JAFFLE_SHOP, STRIPE  | ALL            | READ           |
+| `ANALYTICS` | DBT_DMALUNGU, PUBLIC | ALL            | READ & WRITE   |
 
-**NOTE:** Replace `<ENV>` with the any of the following environment codes: `DEV, TEST or PROD`
 
 ## Project Settings <a name="dbt_project_settings"></a> [↑](#toc-)
 
-The project settings for this projects are persisted in the `dbt_project.yml` file
+The project settings for these projects are persisted in the `dbt_project.yml` file
 
 ### Application Variables <a name="dbt_application_vars"></a> [↑](#toc-)
 
@@ -284,15 +340,21 @@ This application uses the following variables defined in the `dbt_project.yml` f
 
 ## Project Packages/Dependencies <a name="dbt_project_packages_dependencies"></a> [↑](#toc-)
 
-| Package    | Version | Usage                                       |
-|------------|---------|---------------------------------------------|
-| dbt_utils  | 0.8.0   | Used for reusable macros and utils from dbt |
+| Package    | Version | Usage                                                                                  |
+|------------|---------|----------------------------------------------------------------------------------------|
+| dbt_utils  | 0.8.0   | Used for reusable macros and utils from dbt                                            |
+|audit_helper| 0.8.0   | package used to compare two models                                                     |
+|project_evaluator| 0.3.0   | package used Automatically evaluate your dbt project for alignment with best practices |
+|dbt_artifacts| 0.2.0   | package used to builds a mart of tables and views describing the project               |
+
 
 
 
 ## Development Environment Setup <a name="dbt_project_development_environnment"></a> [↑](#toc-)
 
-There are two possible environents where development can happen while building in Bose COE environment. Namely: 
+There are two possible environments where development can happen.
+
+Namely: 
   1. Local Development - this can be IDE that is leveraging dbt core
   2. Cloud IDE - dbt cloud environment
 
@@ -306,69 +368,78 @@ Below are instructions to get setup on both of these environments.
     [Install dbt](https://docs.getdbt.com/dbt-cli/installation).   
     Optionally, you can [set up venv to allow for environment switching](https://discourse.getdbt.com/t/setting-up-your-local-dbt-run-environments/2353). 
 
-2. #### Setup<a name="dbt_project_input_local_development"></a> [↑](#toc-)
+   2. #### Setup<a name="dbt_project_input_local_development"></a> [↑](#toc-)
 
-    Set up a profile called `dbt_project_template` to connect to a data warehouse by following [these instructions](https://docs.getdbt.com/docs/configure-your-profile). If you have access to a data warehouse, you can use those credentials â€“ we recommend setting your [target schema](https://docs.getdbt.com/docs/configure-your-profile#section-populating-your-profile) to be a new schema (dbt will create the schema for you, as long as you have the right privileges). If you don't have access to an existing data warehouse, you can also setup a local postgres database and connect to it in your profile.
-    Open your terminal and navigate to your `profiles.yml`. This is in the `.dbt` hidden folder on your computer, located in your home directory.
+       Set up a profile called `dbt_project_template` to connect to a data warehouse by following [these instructions](https://docs.getdbt.com/docs/configure-your-profile). 
+       If you have access to a data warehouse, you can use those credentials we recommend setting your [target schema](https://docs.getdbt.com/docs/configure-your-profile#section-populating-your-profile) to be a new schema (dbt will create the schema for you, as long as you have the right privileges). 
+       If you don't have access to an existing data warehouse, you can also set up a local postgres database and connect to it in your profile.
+       Open your terminal and navigate to your `profiles.yml`. This is in the `.dbt` hidden folder on your computer, located in your home directory.
 
-    On macOS, you can open the file from your terminal similar to this (which is using the Atom text editor to open the file):
-    ```console
-    $ atom ~/.dbt/profiles.yml
-    ```
+       On macOS, you can open the file from your terminal similar to this (which is using the Atom text editor to open the file):
+       ```console
+       $ atom ~/.dbt/profiles.yml
+       ```
 
-    Insert the following into your `profiles.yml` file and change out the bracketed lines with your own information.
-    [Here is further documentation](https://docs.getdbt.com/docs/available-adapters#dbt-labs-supported) for setting up your profile.
-    ```yaml
-    dbt_project_template:
-        outputs:
-            dev:
-            type: snowflake
-            account: <account>.<region>
+       Insert the following into your `profiles.yml` file and change out the bracketed lines with your own information.
+       [Here is further documentation](https://docs.getdbt.com/docs/available-adapters#dbt-labs-supported) for setting up your profile.
+```yml 
+dbt_sonwflake:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: <account>.<region>
 
-            # User/password auth
-            user: <email/username>
-            authenticator: externalbrowser
+      # User/password auth
+      user: [username]
+      password: [password]
+      authenticator: username_password_mfa
 
-            role: <insert role>
-            database: <insert db>
-            warehouse: <insert warehouse>
-            schema: DBT_<YOUR_USERNAME>
-            threads: 50
-            client_session_keep_alive: True
-            query_tag: <insert tag>
-        target: dev                        
-    ```
+      role: [user role]
+      database: [database name]
+      warehouse: [warehouse name]
+      schema: [dbt schema]
+      threads: [1 or more]
+      client_session_keep_alive: False
+      query_tag: [anything]
 
-    | Configuration Key              | Definition                                                                                                                                                                                                              |
-    | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-    | my_project                     | This is defining a profile - this specific name should be the profile that is referenced in our dbt_project.yml                                                                                                         |
-    | target: dev                    | This is the default environment that will be used during our runs.                                                                                                                                                      |
-    | outputs:                       | This is a prompt to start defining targets and their configurations. You likely won't need more than `dev`, but this and any other targets you define can be used to accomplish certain functionalities throughout dbt. |
-    | dev:                           | This is defining a target named `dev`.                                                                                                                                                                                  |
-    | type: [warehouse_name]         | This is the type of target connection we are using, based on our warehouse. For Bose COE, snowflake should be used: Can be [env]_EDW_WH or [env]_MARTS_WH for example in DEV environment, the warehouse for EDW layer would be `DEV_EDW_WH`                                                               |
-    | threads: 50                    | This is the amount of concurrent models that can run against our warehouse, for this user, at one time when conducting a `dbt run`                                                                                      |
-    | account: <account>.<region>1 | Change this out to the warehouse's account.  Defaulted to Bose COE Snowflake URL                                                                                                                                         |
-    | user: [your_username]          | Change this to use your own username that you use to log in to the warehouse. Use Bose® userid of format ABC1234                                                                                                          |
-    | authenticator: authenticator   | To use with Bose® Single Sign On, use `authenticator` as the value to be prompted for a sign on window from Snowflake. Must use MFA during sign in.                                                                       |
-    | role: transformer              | This is the role that has the correct permissions for working in this project.                                                                                                                                          |
-    | database: analytics            | This is the database name where our models will build                                                                                                                                                                   |
-    | schema: dbt_[userid]        | Change this to a custom name. Follow the convention `dbt_userid`. This is the schema that models will build into / test from when conducting runs locally.                                          |
+      # optional
+      connect_retries: 0 # default 0
+      connect_timeout: 10 # default: 10
+      retry_on_database_errors: False # default: false
+      retry_all: False  # default: false
+      reuse_connections: False # default: false (available v1.4+)
+ ```
+
+   | Configuration Key              | Definition                                                                                                                                                                                                              |
+   | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | dbt_sonwflake                     | This is defining a profile - this specific name should be the profile that is referenced in our dbt_project.yml                                                                                                         |
+   | target: dev                    | This is the default environment that will be used during our runs.                                                                                                                                                      |
+   | outputs:                       | This is a prompt to start defining targets and their configurations. You likely won't need more than `dev`, but this and any other targets you define can be used to accomplish certain functionalities throughout dbt. |
+   | dev:                           | This is defining a target named `dev`.                                                                                                                                                                                  |
+   | type: [warehouse_name]         | This is the type of target connection we are using, based on our warehouse. For Bose COE, snowflake should be used: Can be [env]_EDW_WH or [env]_MARTS_WH for example in DEV environment, the warehouse for EDW layer would be `DEV_EDW_WH`                                                               |
+   | threads: 50                    | This is the amount of concurrent models that can run against our warehouse, for this user, at one time when conducting a `dbt run`                                                                                      |
+   | account: <account>.<region>1 | Change this out to the warehouse's account.  Defaulted to Bose COE Snowflake URL                                                                                                                                         |
+   | user: [your_username]          | Change this to use your own username that you use to log in to the warehouse. Use Bose® userid of format ABC1234                                                                                                          |
+   | password: [password]   | To use with Bose® Single Sign On, use `authenticator` as the value to be prompted for a sign on window from Snowflake. Must use MFA during sign in.                                                                       |
+   | role: transformer              | This is the role that has the correct permissions for working in this project.                                                                                                                                          |
+   | database: analytics            | This is the database name where our models will build                                                                                                                                                                   |
+   | schema: dbt_[userid]        | Change this to a custom name. Follow the convention `dbt_userid`. This is the schema that models will build into / test from when conducting runs locally.                                          |
 
 3. Clone this repository
     
     ```console
-    $ git clone git@bitbucket.org:<organization>/dbt_project_template.git 
+    $ https://github.com/eon-collective/shiny-happiness.git
     ```
 
-4. Change into the `dbt_project_template` directory from the command line:
+4. Change into the `shiny-happiness` directory from the command line:
     ```console
-    $ cd dbt_project_template
+    $ cd shiny-happiness
     ```
 
 5. Try running the following generic/common commands one at a time from your command line:
-    - `dbt debug` - tests your connection. If this fails, check your profiles.yml.
-    - `dbt deps`  - installs any packages defined in the packages.yml file.  
-    For project specific commands see the section below on [dbt Commands: How to Run](#dbt_project_howtorun)
+    - ```dbt debug``` - tests your connection. If this fails, check your profiles.yml.
+    - ```dbt deps```  - installs any packages defined in the packages.yml file.  
 
 
 ### Developing in the Cloud IDE <a name="dbt_project_input_cloud_ide_development"></a> [↑](#toc-)
@@ -377,177 +448,73 @@ The easiest way to contribute to this project is by developing in dbt Cloud. If 
 
 In the command line bar at the bottom of the interface, run the following generic/common commands one at a time:
 
-- `dbt deps`  - installs any packages defined in the packages.yml file.
-
-For project specific commands see the section below on [dbt Commands: How to Run](#dbt_project_howtorun)
+- ```dbt deps```  - installs any packages defined in the packages.yml file.
 
 # dbt Commands: How to Run <a name="dbt_project_howtorun"></a> [↑](#toc-)
 Assuming you have your environment setup as described in previous section, you can run the following commands to manage this dbt project during deployment.
 
 ### To get dependencies:  <a name="dbt_howtorun_deps"></a> [↑](#toc-)
 
-[dbt docs on deps command](https://docs.getdbt.com/reference/commands/deps)
-
-    dbt deps
+```
+dbt deps
+```
 
 ### To compile the dbt project  <a name="dbt_howtorun_compile"></a> [↑](#toc-)
 Generates executable SQL from source model, test, and analysis files. You can find these compiled SQL files in the target/ directory of your dbt project in your development environment. [See dbt docs on compile](https://docs.getdbt.com/reference/commands/compile)
 
-    dbt compile
+``` 
+dbt compile
+```
 
 ### To get the documentation:  <a name="dbt_howtorun_docsgenerate"></a> [↑](#toc-)
 Generate documentation for the project. [See dbt docs on docs generate](https://docs.getdbt.com/reference/commands/cmd-docs#dbt-docs-generate)
-
-    dbt docs generate --no-compile
-
+```
+dbt docs generate --no-compile
+```
 NOTE: since this project uses call statements in some of the dbt model that execute directly in the DW (snowflake), if dbt runs any compile step which includes `dbt docs generate`, existing data in the mart is lost since the call statements execute with `delete from {{this}} <where condition>`
 
 To view the generated in local IDE, run the following command to start a webserver on default port 8000 and serve the generated documents. [See dbt docs on docs serve](https://docs.getdbt.com/reference/commands/cmd-docs#dbt-docs-serve)
-
-    dbt docs serve
-
+```
+dbt docs serve
+```
 ### Loading static/seed files <a name="dbt_howtorun_seed"></a> [↑](#toc-)
-Builds any .csv files as tables in the warehouse. These are located in the data/seed folder of the project. Otherwsie specified in the dbt_project.yml. This materializes the CSVs as tables in your target schema. Note that **not all projects require this step** since the assummption that raw data is already in your warehouse. See [dbt docs on seed](https://docs.getdbt.com/docs/building-a-dbt-project/seeds)
-
-    dbt seed
-
-[dbt docs on seed](https://docs.getdbt.com/docs/building-a-dbt-project/seeds)
+Builds any .csv files as tables in the warehouse. These are located in the data/seed folder of the project. 
+This materializes the CSVs as tables in your target schema. 
+Note that **not all projects require this step** since the assummption that raw data is already in your warehouse. See [dbt docs on seed](https://docs.getdbt.com/docs/building-a-dbt-project/seeds)
+```
+dbt seed
+```
 
 ### Mart build <a name="dbt_howtorun_martbuild"></a> [↑](#toc-)
 
-There are three types of Mart refreshes that get run at different times of the fiscal month. The variables passed to the project determines how the Mart will get refreshed.
-To understand the three refresh types assume that today is April 14, 2022 (202204):
-1. Full Refresh - will use the IDs from April 2019 (201904) to April 2022 (202204)
-2. Monthly Refresh -  will use the IDs from January 2022 (202201) to March 2022 (202203)
-3. Weekly Refresh -  will use the IDs from February 2022 (202202) to April 2022 (202204)
-
 #### The Default Values (SOFT Full Refresh w/ TEST_RAW Environment)
-
-    dbt run
-
+```
+dbt run
+```
 #### A Monthly Refresh w/ the TEST_RAW environment
-
-    dbt run --vars '{refresh_type: MONTHLY}'
-
+```
+ dbt run --vars '{refresh_type: MONTHLY}'
+```
 #### A Custom Refresh from 201801 - 202201 w/ the PROD_RAW Environment 
-
-    dbt run --vars '{refresh_type: CUSTOM, fmthid_start: 201801, fmth_id_end: 202201, env: PROD}'
-
+```
+ dbt run --vars '{refresh_type: CUSTOM, fmthid_start: 201801, fmth_id_end: 202201, env: PROD}'
+```
 #### A HARD Full Refresh w/ the PROD_RAW Environment
-
-    dbt run --full-refresh --vars'{env: PROD}'
-
-<i> Both a HARD & SOFT Full Refresh reloads the previous 36 months of data. A HARD refresh drops and recreates the table whereas a SOFT refresh drops and recreates the data.</i>
+```
+ dbt run --full-refresh --vars'{env: PROD}'
+```
+<i> Both a HARD & SOFT Full Refresh reloads the previous 36 months of data. A HARD refresh drops and recreates the 
+table whereas a SOFT refresh drops and recreates the data.</i>
 
 ### List Project resources <a name="dbt_howtorun_ls"></a> [↑](#toc-)
 
 List project resource. [dbt docs on ls command and reference to resource selection syntax](https://docs.getdbt.com/reference/commands/list#overview)
-
-    dbt ls
-
-# CRT Models [↑](#toc-)
-In the `models/onboarding/*` folder there is a collection of models with the prefix `crt_`. These models are a reference/tool to help migrate the data from Redshift to Snowflake.
-They simply execute a `CREATE TABLE IF NOT EXISTS` command to create tables in Snowflake with structures identical to Redshift. Once those tables are converted to DBT models the crt_model
-becomes irrelevant because DBT uses the `CREATE OR REPLACE` command. 
-
-# Control/Audit Framework <a name="dbt_project_audit_control_framework"></a> [↑](#toc-)
-
-##	Introduction [↑](#toc-)
-Mart Auditor is a dbt package developed to capture runtime information about marts being executed in Bose COE data loads. These runtime metrics can be used to analyze data marts executed in past and for auditing purpose.
-##	Design
-Any data mart that is developed in Bose COE project can plug in Mart Auditor package to capture data mart run time metrics. Mart Auditor creates two different tables i.e., Batch and Batch_Loging for all marts in database. These tables can be used to query to know past executions, errors, execution re tryâ€™s etc. 
-
-![Scheme](etc/images/mart_audit_model.png)
-
-Mart Auditor is a light weight dbt package that inserts records into above tables as mart progresses and creates table or views as part of model creating and execution. There is only one entry per execution of Mart in Batch table and multiple entries one per model in batch_logging table. Association between batch and batch_logging table is: 1 -> M
-
-
-
-###	Batch table structure [↑](#toc-)
-To get the DDL Structure from Snowflake, run the command: `select get_ddl('table', 'dev_marts.cf.batch');` and it will output the following:
-
-```jql
-create or replace TABLE BATCH (
-	BATCHID NUMBER(38,0),
-	RETRY_CNT NUMBER(38,0),
-	DBT_MART VARCHAR(16777216),
-	DBT_MART_REFRESH_TYPE VARCHAR(16777216),
-	START_DATE TIMESTAMP_NTZ(9),
-	END_DATE TIMESTAMP_NTZ(9),
-	DURATION_IN_SECONDS NUMBER(38,0),
-	LOAD_STATUS VARCHAR(16777216)
-);
+```
+ dbt ls
 ```
 
-###	Batch_logging table structure [↑](#toc-)
-To get the DDL Structure from Snowflake, run the command: `select get_ddl('table', 'dev_marts.cf.batch_logging');` and it will output the following:
-
-```jql
-create or replace TABLE BATCH_LOGGING (
-	BLG_KEY NUMBER(38,0),
-	BATCHID NUMBER(38,0),
-	DBT_MART VARCHAR(16777216),
-	DBT_MART_REFRESH_TYPE VARCHAR(16777216),
-	DBT_MODEL_NAME VARCHAR(16777216),
-	SF_TABLE_NAME VARCHAR(16777216),
-	ROWS_BEFORE NUMBER(38,0),
-	ROWS_AFTER NUMBER(38,0),
-	STARTDATE TIMESTAMP_NTZ(9),
-	COMPLETEDATE TIMESTAMP_NTZ(9),
-	ERROR_MESSAGE VARCHAR(16777216)
-);
-```
-
-##	Macros developed in Mart Auditor:  [↑](#toc-)
-Total 4 macros are developed as part of Mart Auditor dbt package. These macros can be called by any dbt mart by deploying into their dbt mart project.
-
-###	Insert_batch : [↑](#toc-) 
-This macro inserts a record into batch table as soon as mart stars execution. Status in batch table will be inserted as â€œStartedâ€ along with Mart name, BatchID, StartDateTime etc.
-
-###	insert_batch_logging : [↑](#toc-)
-This macro inserts a record into batch_logging table as soon as any model in dbt mart stars executing. It will insert all the information about models that we execute as part of data mart. Important information like model name, mart name, rows in table/view before model executes, model execution start date time and model execution status as â€œStartedâ€ will be captured into table.
-
-###	update_batch_logging: [↑](#toc-) 
-This macro is developed to validate the model executed by data mart. If a model in mart is executed successfully then this macro updates the previously inserted record in batch_logging table with updated values like status will be updated as completed, rows in table after model executes, end date time for model and Table or View name that macro creates in database.
-
-###	Update_batch : [↑](#toc-)
-Once all the models in data mart are executed successfully then this macro updates batch table record by changing status to completed and captures information like duration in seconds, retry_count etc. If any of the model in the mart is failed then this macro updates batch table with failed status and increase the retry count value by one.
-
-##	Steps to use Mart Auditor in your dbt mart: [↑](#toc-) 
-
-*Note*: Mart Auditor is available in bitbucket at following location: 
-
-Bitbucket Location: 
-> ``
-
-1.	Add Mart Auditor package in packages.yml file like below example:
-
-
-2.	Execute `dbt deps` command to deploy mart auditor package into your dbt mart
-
-3.	You can find mart auditor deployed into your dbt *packages* folder of your project
-
-4.	You can call above macros in your dbt_proejct.yml file with below example:
-
-    1. Insert_batch(dbt_mart_name, dbt_mart_refresh_type) : 
-        This macro accepts two parameters for Mart_name and Mart_refresh_type. Mart_refresh_type is optional parameter and if you donâ€™t provide refresh type parameter then it will insert NULL value into batch table. Call this macro at â€œon-run-startâ€ section of dbt_project.yml.
-
-    2. insert_batch_logging (dbt_mart_name, dbt_model_name, table_name, refresh_type):
-    This macro accepts four parameters for Mart_name, model_name, table_name and refresh_type. Table_name and refresh_type are optional parameters where table name takes model name and refresh_type takes null value by default if you donâ€™t supply. Call this macro at pre-hook section of dbt_project.yml. Pass current model name to the macro with keyword â€œthisâ€.
-
-    3. Update_batch_logging (dbt_mart_name, dbt_model_name, table_name, refresh_type):
-    This macro accepts four parameters for Mart_name, model_name, table_name and refresh_type. Table_name and refresh_type are optional parameters where table name takes model name and refresh_type takes null value by default if you donâ€™t supply. Call this macro at post-hook section of dbt_project.yml
-
-    4. update_batch (dbt_mart_name, dbt_mart_refresh_type) : 
-    This macro accepts two parameters for Mart_name and Mart_refresh_type. Mart_refresh_type is optional parameter and if you donâ€™t provide refresh type parameter then it will insert null value into batch table. Call this macro at â€œon-run-endâ€ section of dbt_project.yml.
-
-Dataops Queries for this auditing this mart run are provided in the `analysis` folder with the file name `mart_auditor_dataops.sql`
 
 # Testing <a name="dbt_project_testing"></a> [↑](#toc-)
-
-*documentation placeholder - call out any tests being run in the project* 
-
-[dbt docs on testing](https://docs.getdbt.com/docs/building-a-dbt-project/tests)
 
 ## Continuos Integration: Bitbucket Pipelines <a name="dbt_project_ci"></a>                                                             [↑](#toc-)
 
