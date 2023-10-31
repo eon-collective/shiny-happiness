@@ -7,7 +7,7 @@ with orders as (
         status
 
     from {{ source('jaffle_shop', 'orders') }}
-    {{ limit_date_in_dev(col_name='order_date', dev_dates_of_data=1000) }}
+         {{ limit_date_in_dev(col_name='order_date', dev_dates_of_data=1000) }}
 
 )
 
