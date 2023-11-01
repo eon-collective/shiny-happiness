@@ -50,7 +50,7 @@
     - [List Project resources](#dbt_howtorun_ls)
 - [Control/Audit Framework/Monitoring](#dbt_project_audit_control_framework)
 - [Testing](#dbt_project_testing)
-    - [Continuos Integration: Bitbucket Pipelines](#dbt_project_ci)
+    - [Continues Integration: GitHub Action Pipelines](#dbt_project_ci)
         - [Credentials](#dbt_project_ci_credentials)
         - [Pipe Setup](#dbt_project_ci_pipe_setup)
     - [dbt Tests](#dbt_ci_dbt_tests)
@@ -130,8 +130,6 @@ The following raw tables are consumed by this project
 [↑](#toc-)
 ###  Static/Seeds <a name="dbt_project_input_static_or_seeds"></a>
 
-The following static tables are used by this project. Non-seed files are located in the 
-'s3://bose-bucket/*' folder. They get `COPY INTO` the appropriate tables using a storage integration.
 
 The following seeds are present in the project:
 
@@ -413,20 +411,20 @@ dbt_sonwflake:
       reuse_connections: False # default: false (available v1.4+)
  ```
 
-   | Configuration Key            | Definition                                                                                                                                                                                                                                  |
-   |------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-   | dbt_sonwflake                | This is defining a profile - this specific name should be the profile that is referenced in our dbt_project.yml                                                                                                                             |
-   | target: dev                  | This is the default environment that will be used during our runs.                                                                                                                                                                          |
-   | outputs:                     | This is a prompt to start defining targets and their configurations. You likely won't need more than `dev`, but this and any other targets you define can be used to accomplish certain functionalities throughout dbt.                     |
-   | dev:                         | This is defining a target named `dev`.                                                                                                                                                                                                      |
-   | type: [warehouse_name]       | This is the type of target connection we are using, based on our warehouse. For Bose COE, snowflake should be used: Can be [env]_EDW_WH or [env]_MARTS_WH for example in DEV environment, the warehouse for EDW layer would be `DEV_EDW_WH` |
-   | threads: 50                  | This is the amount of concurrent models that can run against our warehouse, for this user, at one time when conducting a `dbt run`                                                                                                          |
-   | account: <account>.<region>1 | Change this out to the warehouse's account.  Defaulted to Bose COE Snowflake URL                                                                                                                                                            |
-   | user: [your_username]        | Change this to use your own username that you use to log in to the warehouse. Use Bose® userid of format ABC1234                                                                                                                            |
-   | password: [password]         | To use with Bose® Single Sign On, use `authenticator` as the value to be prompted for a sign on window from Snowflake. Must use MFA during sign in.                                                                                         |
-   | role: transformer            | This is the role that has the correct permissions for working in this project.                                                                                                                                                              |
-   | database: analytics          | This is the database name where our models will build                                                                                                                                                                                       |
-   | schema: dbt_[userid]         | Change this to a custom name. Follow the convention `dbt_userid`. This is the schema that models will build into / test from when conducting runs locally.                                                                                  |
+   | Configuration Key            | Definition                                                                                                                                                                                                              |
+   |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | dbt_sonwflake                | This is defining a profile - this specific name should be the profile that is referenced in our dbt_project.yml                                                                                                         |
+   | target: dev                  | This is the default environment that will be used during our runs.                                                                                                                                                      |
+   | outputs:                     | This is a prompt to start defining targets and their configurations. You likely won't need more than `dev`, but this and any other targets you define can be used to accomplish certain functionalities throughout dbt. |
+   | dev:                         | This is defining a target named `dev`.                                                                                                                                                                                  |
+   | type: [warehouse_name]       | This is the type of target connection we are using, based on our warehouse.                                                                                                                                             |
+   | threads: 50                  | This is the amount of concurrent models that can run against our warehouse, for this user, at one time when conducting a `dbt run`                                                                                      |
+   | account: <account>.<region>1 | Change this out to the warehouse's account.                                                                                                                                                                             |
+   | user: [your_username]        | Change this to use your own username that you use to log in to the warehouse.                                                                                                                                           |
+   | password: [password]         | This is the user password                                                                                                                                                                                               |
+   | role: transformer            | This is the role that has the correct permissions for working in this project.                                                                                                                                          |
+   | database: analytics          | This is the database name where our models will build                                                                                                                                                                   |
+   | schema: dbt_[userid]         | Change this to a custom name. Follow the convention `dbt_userid`. This is the schema that models will build into / test from when conducting runs locally.                                                              |
 
 3. Clone this repository
     
@@ -700,43 +698,37 @@ List project resource. [dbt docs on ls command and reference to resource selecti
 
 # Testing <a name="dbt_project_testing"></a> [↑](#toc-)
 
-## Continuos Integration: Bitbucket Pipelines <a name="dbt_project_ci"></a>                                                             [↑](#toc-)
+## Continuos Integration: GitHub Action Pipelines <a name="dbt_project_ci"></a>                                                             [↑](#toc-)
 
 
 ### Credentials <a name="dbt_project_ci_credentials"></a> [↑](#toc-)
 
-Credentials in a bitbucket pipe are passed through Repository variables. See more on Bitbucket pipeline and environment variables: [User-defined variables](https://support.atlassian.com/bitbucket-cloud/docs/variables-and-secrets/). 
-The following variables have been configured with `DEV` service account details.
+Credentials in a GitHub Action are passed through Repository variables. See more on GitHub Action and environment variables: [User-defined variables](https://docs.github.com/en/actions/learn-github-actions/variables). 
 
-| **Custom Variable** | **Variable Description**                           |
-|---------------------|----------------------------------------------------|
-| DBT_TARGET_TYPE     | Type of DW for dbt to use : default is `snowflake` |
-| DBT_TARGET_URL      | snowflake url: <account>.<region>                  |
-| DBT_USER            | snowflake username for authentication              |
-| DBT_PASSWORD        | snowflake password for authentication              |
+The following GitHub secretes should be configured: 
 
-Most parameters are configured as a secret in Bitbucket and cannot be viewed.
+| Secrete Name        | Values Expected           |
+|---------------------|---------------------------|
+| DTB_PROFILE_ACCOUNT | snowflake account id      |
+| DTB_PROFILE_USER    | Snowflake username        |
+| DTB_PROFILE_PW      | Snowflake user password   |
+| DTB_PROFILE_ROLE    | Snowflake user role       |
+| DTB_PROFILE_DB      | Snowflake database name   |
+| DTB_PROFILE_SCHEMA  | dbt schema                |
+| DTB_PROFILE_WH      | Snowflake warehouse name  |
 
-### Bitbucket Pipe Setup <a name="dbt_project_ci_pipe_setup"></a> [↑](#toc-)
 
-This dbt project CI pipe is configured as step in a shared bitbucket pipeline yml file (at root level of this repo). The following is the settings for this mart. 
+### GitHub Action Pipe Setup <a name="dbt_project_ci_pipe_setup"></a> [↑](#toc-)
 
-```yml
-      - step:
-          name: 'dbt_project_template_DBT - Compile'
-          trigger: manual
-          script:
-            - echo "Starting build for dbt_project_template_DBT"
-            - echo "$DBT_PROJECT_BITBUCKET_PUB_CERT" > ~/.ssh/authorized_keys
-            - mkdir ~/.dbt
-            - touch ~/.dbt/profiles.yml
-            - 'echo -e "dbt_project_template:\n  outputs:\n    dev:\n      type: $DBT_TARGET_TYPE\n      account: $DBT_TARGET_URL\n\n      user: $DBT_USER\n      password: $DBT_PASSWORD\n\n      role: $DBT_ROLE\n      database: DEV_MARTS\n      warehouse: $DBT_WH\n      schema: dbt_dbt_project_template\n      threads: $DBT_NUM_THREADS\n      client_session_keep_alive: True\n      query_tag: dbt\n  target: dev\n " >> ~/.dbt/profiles.yml'
-            - cd dbt_project_template/
-            - ls -ltr
-            - dbt deps
-            - dbt compile
-            - echo "Done build for dbt_project_template_DBT"
-```
+The dbt project CI pipe is configured as a set of yml files in '.github/workflows'. 
+
+| pipeline name               | pipeline config file location           |Notes|
+|-----------------------------|-----------------------------------------|--|
+| dbt linting (sqlfluff)      | .github/workflows/linting.yml           |  |
+| dbt project evaluator       | .github/workflows/project_evaluator.yml |  |
+| dbt project operation test  | .github/workflows/ci_pipe.yml           |  |
+
+
 ## dbt Tests <a name="dbt_ci_dbt_tests"></a> [↑](#toc-)
 
 # Deployment<a name="dbt_project_deployment"></a> [↑](#toc-)
