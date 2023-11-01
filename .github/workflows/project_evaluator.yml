@@ -10,15 +10,15 @@
 #
 # For this ci pipeline  to work effective you will need to set the following parameters in you repo secretes in Git Action
 #
-      | Secrete Name        | Values Expected           |
-      |---------------------|---------------------------|
-      | DTB_PROFILE_ACCOUNT | snowflake account id      |
-      | DTB_PROFILE_USER    | Snowflake username        |
-      | DTB_PROFILE_PW      | Snowflake user password   |
-      | DTB_PROFILE_ROLE    | Snowflake user role       |
-      | DTB_PROFILE_DB      | Snowflake database name   |
-      | DTB_PROFILE_SCHEMA  | dbt schema                |
-      | DTB_PROFILE_WH      | Snowflake warehouse name  |
+#      | Secrete Name        | Values Expected           |
+#      |---------------------|---------------------------|
+#      | DTB_PROFILE_ACCOUNT | snowflake account id      |
+#      | DTB_PROFILE_USER    | Snowflake username        |
+#      | DTB_PROFILE_PW      | Snowflake user password   |
+#      | DTB_PROFILE_ROLE    | Snowflake user role       |
+#      | DTB_PROFILE_DB      | Snowflake database name   |
+#      | DTB_PROFILE_SCHEMA  | dbt schema                |
+#      | DTB_PROFILE_WH      | Snowflake warehouse name  |
 
 
 name: dbt project evaluator
