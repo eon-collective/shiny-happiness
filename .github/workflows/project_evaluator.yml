@@ -1,4 +1,27 @@
-name: Run dbt project evaluator CI check
+# Comments:
+# This package highlights areas of a dbt project that are misaligned with dbt Labs' best practices. Specifically, this package tests for:
+# 1. Modeling - your dbt DAG for modeling best practices
+# 2. Testing - your models for testing best practices
+# 3. Documentation - your models for documentation best practices
+# 4. Structure - your dbt project for file structure and naming best practices
+# 5. Performance - your model materializations for performance best practices
+# 6. Governance - your model governance feature best practices
+# The package documentation : https://dbt-labs.github.io/dbt-project-evaluator/0.8/
+#
+# For this ci pipeline  to work effective you will need to set the following parameters in you repo secretes in Git Action
+#
+#      | Secrete Name        | Values Expected           |
+#      |---------------------|---------------------------|
+#      | DTB_PROFILE_ACCOUNT | snowflake account id      |
+#      | DTB_PROFILE_USER    | Snowflake username        |
+#      | DTB_PROFILE_PW      | Snowflake user password   |
+#      | DTB_PROFILE_ROLE    | Snowflake user role       |
+#      | DTB_PROFILE_DB      | Snowflake database name   |
+#      | DTB_PROFILE_SCHEMA  | dbt schema                |
+#      | DTB_PROFILE_WH      | Snowflake warehouse name  |
+
+
+name: dbt project evaluator
 on:
   push:
     branches: [ "feature/*" ]

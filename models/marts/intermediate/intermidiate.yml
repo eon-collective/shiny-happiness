@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: int_orders_pivoted
+    description: Pivoted order
+    columns: 
+      - name: order_id
+        description: Primary key for int_orders_pivoted.
+        tests:
+          - unique
+          - not_null

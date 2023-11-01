@@ -1,4 +1,26 @@
-name: Run dbt CI checks
+# Comments:
+# The ci performs the most common dbt commands to ensure the project changes are working and interpretable with
+#  the production brunch
+# The following commands:
+#      1. dbt deps
+#      2. dbt debug
+#      3. dbt compile
+#      4. dbt run
+#      5. dbt test
+#      6. dbt clean
+# For this ci pipeline  to work effective you will need to set the following parameters in you repo secretes in Git Action
+#
+#      | Secrete Name        | Values Expected           |
+#      |---------------------|---------------------------|
+#      | DTB_PROFILE_ACCOUNT | snowflake account id      |
+#      | DTB_PROFILE_USER    | Snowflake username        |
+#      | DTB_PROFILE_PW      | Snowflake user password   |
+#      | DTB_PROFILE_ROLE    | Snowflake user role       |
+#      | DTB_PROFILE_DB      | Snowflake database name   |
+#      | DTB_PROFILE_SCHEMA  | dbt schema                |
+#      | DTB_PROFILE_WH      | Snowflake warehouse name  |
+
+name: dbt project operation test
 on:
   push:
     branches: [ "feature/*" ]

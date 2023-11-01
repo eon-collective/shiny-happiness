@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: Customer details table.
+    columns:
+      - name: customer_id
+        description: The primary key => dim_customers.
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_orders
+    description: a join between orders and payment details
+    columns:
+      - name: order_id
+        description: Primary key for fct_orders.
+        tests:
+          - unique
+          - not_null
