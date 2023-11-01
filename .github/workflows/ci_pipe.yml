@@ -20,7 +20,7 @@
 #      | DTB_PROFILE_SCHEMA  | dbt schema                |
 #      | DTB_PROFILE_WH      | Snowflake warehouse name  |
 
-name: Run dbt CI checks
+name: dbt project operation test
 on:
   push:
     branches: [ "feature/*" ]
