@@ -67,8 +67,6 @@
 - [Service Level Agreements (SLA)](#dbt_project_sla)
 - [Troubleshoot/ F.A.Q](#dbt_troubleshoot)
     - [known Issues](#dbt_troubleshoot_known_issues)
-    - [Debugging](#dbt_troubleshoot_debugging)
-- [Migration Notes](#dbt_project_migration_notes)
 - [Resources](#resources-)
 - [Cutover Plan](#cutover_plan)
 
@@ -557,123 +555,38 @@ This dbt project CI pipe is configured as step in a shared bitbucket pipeline ym
 
 # Deployment<a name="dbt_project_deployment"></a> [↑](#toc-)
 
-## Continuous Deployment: dbt_runner <a name="dbt_cd_dbt_runner"></a> [↑](#toc-)
+## Continuous Deployment: <a name="dbt_cd_dbt_runner"></a> [↑](#toc-)
+### CI pipelines
+To facilitates Continuous integration the following ci pipeline have been implemented on this project:
+1. dbt linting (sqlfluff) 
+2. dbt project evaluator
+3. dbt project operation test
 
-This project can be run in Bose COE TMC environment using the [dbt_runner template](). This template is available on all environments and leveraged during from SIT to Deployment phase of a build project. 
-The dbt_runner artifcat/template is responsible for: 
+This ci plipline can are located at: `.github/workflows` folder in the project:
 
-1. Cloning the latest code from specified branch and url in a repo
-2. Setting up a profiles.yml for the tasks run based on the provided credentials.
-3. Execute a `dbt deps` to get the project prepared for any commands passed
-4. Run the provided dbt commands - send notification incase of error during this run
-5. At job end, upload the dbt artifact files to S3 for technical lineage harvesting. The following files are uploaded to S3: `manifest.json`, `catalog.json (if available)` and the `run_results.json`
+**Note:**
 
-The three Bose COE environments available for building and deployment of dbt projects: 
+The above CI pipelines requre the following secrete to be set in the project repo secrete in github action:
 
-| **ENVIRONMENT** | **PURPOSE**                | **Branch used**               |
-|-----------------|----------------------------|-------------------------------|
-| DEV             | System Integration Testing | feature/[more_descptive_name] |
-| TEST            | User Acceptance Testing    | feature/[more_descptive_name] |
-| PROD            | Deployment (Go Live)       | main                          |
+| Secrete Name        | Values Expected           |
+|---------------------|---------------------------|
+| DTB_PROFILE_ACCOUNT | snowflake account id      |
+| DTB_PROFILE_USER    | Snowflake username        |
+| DTB_PROFILE_PW      | Snowflake user password   |
+| DTB_PROFILE_ROLE    | Snowflake user role       |
+| DTB_PROFILE_DB      | Snowflake database name   |
+| DTB_PROFILE_SCHEMA  | dbt schema                |
+| DTB_PROFILE_WH      | Snowflake warehouse name  |
 
-All developer unit testing are done on the local/Cloud IDE. See [Setting development environment](#dbt_project_input_local_development)
-
-Bose® corp leverages “continuous deployment” or “direct promotion” for branching strategy.
-The diagram below illustrates the branching strategy as used at Bose® for dbt project development.
-
-```mermaid
-graph TD
-A((main)) -- clone --> B{FeatureA branch}
-B -- pull request --> A
-B -- fork --> D>builder1 branch]
-D -- pull request--> B
-B -- fork --> E>builder2 branch]
-E -- pull request --> B
-A -- clone --> F{FeatureB branch}
-F -- pull request --> A 
-F -- fork --> G>builder3 branch]
-G -- pull request--> F
-F -- fork --> H>builder4 branch]
-H -- pull request --> F
-```
-
-### Credentials <a name="dbt_project_cd_credentials"></a> [↑](#toc-)
-
-The [dbt_runner]() in Bose COE TMC uses [Credentials Vaulting Framework]() to store credentials for various projects. dbt_runner needs two main credentials to run. The following credentials are used to run this project across all Bose COE Environments
-
-| **\\**                            | **DEV**                       | **TEST**                       | **PROD**                                                         |
-|---------------------------------|-------------------------------|--------------------------------|------------------------------------------------------------------|
-| Bose COE_SNOWFLAKE_CredVaultKey  | `dev/snowflake/mart/dbt_project_template` | `test/snowflake/mart/dbt_project_template` | `prod/snowflake/mart/dbt_project_template`                                   |
-| Bose COE_BUGTRACKER_CredVaultKey | `N/A- Not Applicable`                | `N/A- Not Applicable`                 | `bose/prod/operations/alerts/bug_tracker_service` |
-
-
-
-### Alerts <a name="dbt_project_cd_alerts"></a> [↑](#toc-)
-The dbt_runner template has a notification/alerting mechanism incase of any WARNING, ERROR or FATAL messages. To configure notification in dbt_runner for this project;
-
-1. In the advanced parameter `Email_Notify` parameter, provide the value `true`
-2. In the advanced parameter `Bose COE_BUGTRACKER_CredVaultKey` parameter, provide a valid credential key provided by the Bose COE platform team. See the values to use per environment in [above section](#dbt_project_cd_credentials)
-
-
-### Job Names <a name="dbt_project_cd_job_names"></a> [↑](#toc-)
-The following is a list of dbt_runner tasks needed to run this mart successfully end to end
-
-| **JOB_NAME**                                                    | **JOB_DESCRIPTION**                                                                    | **JOB_RUN_PARAMETERS**                                                                                               | **NOTES**                                                                                                       |
-|-----------------------------------------------------------------|----------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| DBT_RUNNER-MCA-SEED                             | Load static files with seed                                                            | `dbt seed`                                                                                                           | run one time during project deployment/initialization or incase of a change in the csv files within the project |
-
-
-### Adhoc Runs
-
-#### (Re-)Loading seeded files <a name="dbt_howtorun_seed"></a> [↑](#toc-)
-
-Incase of changes to the static files that hosted within the dbt project in the `data` or `seeds` folder (varies with the project as specified by the seed-paths config in *dbt_project.yml*)
-Below steps should be followed to reload the seeded data once this project has been deployed to PRODUCTION.
-
-1. Create a new feature branch from main
-2. Checkout feature branch to IDE
-3. Replace the existing files in the data/ref_data_seeds folder.
-4. Commit the changes to seed files and push to remote feature branch
-5. Create a Pull Request from feature branch to main
-6. Merge the feature branch into main
-7. Run the TMC Task `DBT_RUNNER-MCA-SEED` to refresh the Ref Data for MCA project.
-    - If no new files are provided but Seed data has to be refreshed, then only Run the TMC Task `DBT_RUNNER-MCA-SEED`
-
-##### (Re-)Loading static S3 files <a name="dbt_howtorun_seed"></a> [↑](#toc-)
-
-Incase of changes to the static files that hosted within Bose COE S3 folders
-Below steps should be followed to reload the snowflake data once this project has been deployed to PRODUCTION.
-
-1. Load the new files to S3 production bucket: check in `macros/init_project.sql` for precise S3 data locations.
-2. Run the TMC Task `DBT_RUNNER-MARTS-GTSi_EMEA-INIT_PROJECT` to refresh the Ref Data for UMM_EMEA.
-    - If no new files are provided but Seed data has to be refreshed, then only Run the TMC Task `DBT_RUNNER-MARTS-GTSi_EMEA-INIT_PROJECT`
-
-### Orchestration <a name="dbt_project_cd_orchestration"></a> [↑](#toc-)
-
-To run this project end to end, the following diagram illustrates all the steps and dependencies and their orchestration flow
-
-Below is the orchestrated steps to execute the full refresh run for this project
-
-![Scheme](etc/images/full_refresh_orchestration.png)
-
-Below is the orchestrated steps to execute the openweek run for this project
-
-![Scheme](etc/images/openweek_orchestration.png)
-
-Below is the orchestrated steps to execute the closeweek run for this project
-
-![Scheme](etc/images/closeweek_orchestration.png)
 
 # Support Team Structure <a name="dbt_project_support_team_structure"></a> [↑](#toc-)
 
 Below is the support team structure for this project:
 
-| **Team**      | **Contact Information**                      |
-|---------------|----------------------------------------------|
-| Build Team    | EON Collective - Talend to dbt Migration project |
-| Run Team      | run-team@bose                   |
-| Source Team   | source-team@bose                                            |
-| Consumer Team | consumer-team@bose                                             |
+| **Team**      | **Contact Information**           |
+|---------------|-----------------------------------|
+| Build Team    | Daniel Malungu - dbt fundamentals |
+| Consumer Team | Public project                    |
 
 
 # Service Level Agreements (SLA) <a name="dbt_project_sla"></a> [↑](#toc-)
@@ -689,23 +602,10 @@ This project utilizes the following SLA schedule.
 
 # Troubleshoot/ F.A.Q <a name="dbt_troubleshoot"></a> [↑](#toc-)
 
-*documentation placeholder*
+The project FAQ's can be found at:
 
-## Known Issues <a name="dbt_troubleshoot_known_issues"></a> [↑](#toc-)
+[Project FAQ's](etc/project_faqs.md)
 
-1. Existing data is lost or deleted after running `dbt docs generate` without the `--no-compile` flag.
-   This is a known issue, since the project uses call statements that execute on the DW directly, if dbt internally executes a `compile` step, the call statements are executed. To avoid this behavior, use the `--no-compile` flag with the dbt docs generate command. See documentation on [dbt-docs-generate with --no-compile flag](https://docs.getdbt.com/reference/commands/cmd-docs#dbt-docs-generate) and [dbt execute](https://docs.getdbt.com/reference/dbt-jinja-functions/execute)
-   If existing data is lost, please rerun the data mart build using the **FULLREFRESH** plan and tasks.
-
-## Debugging <a name="dbt_troubleshoot_debugging"></a> [↑](#toc-)
-1. [See dbt docs on Debugging errors](https://docs.getdbt.com/docs/guides/debugging-errors#general-process-of-debugging) - this has a comprehensive list and categorization of common errors seen on a typical dbt project. Note the [common pitfalls section](https://docs.getdbt.com/docs/guides/debugging-errors#common-pitfalls) also
-
-
-# Additional Notes <a name="dbt_project_migration_notes"></a> [↑](#toc-)
-
-During the development of this project ......
-
-> Include any additional notes here for your project
 
 # Resources <a name="resources"></a> [↑](#toc-)
 
@@ -714,10 +614,7 @@ During the development of this project ......
 - Join the [chat](http://slack.getdbt.com/) on Slack for live discussions and support
 - Find [dbt events](https://events.getdbt.com) near you
 - Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
-- Check out [dbt Developer blog on git cherry pick](https://docs.getdbt.com/blog/the-case-against-git-cherry-picking)
-
-# Cutover Plan <a name="cutover_plan"></a> [↑](#toc-)
-Please review the curover plan as templated in `../etc/CUTOVER_PLAN.md`
+- Check out [dbt Developer blog on git cherry-pick](https://docs.getdbt.com/blog/the-case-against-git-cherry-picking)
 
 [Back to top ↑](#toc-)
 
